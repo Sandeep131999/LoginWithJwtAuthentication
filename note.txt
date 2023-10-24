@@ -1,0 +1,151 @@
+https://youtu.be/bWA-pZJrOFE
+
+https://github.com/Sandeep131999/LoginWithJwtAuthentication.git
+
+
+//Correct Method to Decode the Jwt Token in Js
+function parseJwt ()
+{
+    const token = sessionStorage.getItem('token');
+    var base64Url = token.split('.')[1];
+    var base64 = decodeURIComponent(atob(base64Url).split('').map((c)=>{
+        return '%'+ ('00'+c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    console.log(JSON.parse(base64));
+    return JSON.parse(base64);
+}
+
+https://youtu.be/2ZQzMB5YA_U
+
+
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
+public class JwtAuthorizationAttribute : Attribute, IAuthorizationFilter
+{
+    private readonly string _secretKey; // Replace with your secret key
+
+    public JwtAuthorizationAttribute(string secretKey)
+    {
+        _secretKey = secretKey;
+    }
+
+    public void OnAuthorization(AuthorizationFilterContext context)
+    {
+        // Retrieve the token from the request header or query string
+        string? token = context.HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+
+        if (string.IsNullOrEmpty(token))
+        {
+            // Token not found; return unauthorized response
+            context.Result = new UnauthorizedResult();
+            Console.WriteLine("Token not found");
+            return;
+        }
+
+        try
+        {
+            // Validate the token
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_secretKey);
+            tokenHandler.ValidateToken(token, new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = false,
+                ValidateAudience = false
+            }, out var validatedToken);
+
+            // The token is valid; continue with the request
+        }
+        catch (SecurityTokenException)
+        {
+            // Token validation failed; return unauthorized response
+            context.Result = new UnauthorizedResult();
+        }
+    }
+}
+
+
+//Howto make a nobody cannot visible the token in the browser
+var token = "my-secret-token";
+var encryptedToken = CryptoJS.encrypt(token, "my-secret-key");
+sessionStorage.setItem("token", encryptedToken);
+
+var encryptedToken = sessionStorage.getItem("token");
+var decryptedToken = CryptoJS.decrypt(encryptedToken, "my-secret-key");
+
+//Error Pages Display Using Program.cs 
+https://youtu.be/12clCUMPlsY
+
+
+//C
+https://youtu.be/AUbGk5Ab40A
+
+//With WebAPi 
+ using (var httpClient = new HttpClient())
+ {
+ // Set the base URL for the Web API
+ httpClient.BaseAddress = new Uri("https://localhost:7093/");
+ // Build the request URL with parameters
+ var requestUrl = $"Department/Authenticate?employeeId={employeeId}&password={password}";
+ // Create an HttpContent object with any data you want to send
+ // In this case, we're not sending any additional data in the request body
+ HttpContent content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
+ // Send the POST request
+ var response = await httpClient.PostAsync(requestUrl, content);
+ if (response.IsSuccessStatusCode)
+ {
+     // Handle the successful response here
+     var responseContent = await response.Content.ReadAsStringAsync();
+     message = "adminLogin";
+     HttpContext.Session.SetString("token", responseContent);
+     HttpContext.Session.SetString(SESSION_KEY.CHECK_ROLE, ROLES.ADMIN);
+     token="responseContent";
+     }
+     // Process the response content as needed
+     else
+     {
+         // Handle error response
+         // You can access the error information from response.Content
+         // For example: var errorContent = await response.Content.ReadAsStringAsync();
+     }
+ }
+
+//Jwt Authentication Connfiguration in dotnet web api 
+
+builder.Services.AddSwaggerGen(sw=>
+    sw.SwaggerDoc("v1",
+    new OpenApiInfo{Title="INVENTORYWIZARD",Version="1.0"}));
+
+    builder.Services.AddSwaggerGen(s =>
+        s.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            In = ParameterLocation.Header,
+            Description="Inwiz Jwt Authorization",
+            Name = "Authorization",
+            Type= SecuritySchemeType.Http,
+            BearerFormat="JWT",
+            Scheme="bearer"
+        }));
+    
+    builder.Services.AddSwaggerGen(w =>
+        w.AddSecurityRequirement(
+        new OpenApiSecurityRequirement
+          {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                new List<string>()
+            }
+        }));
